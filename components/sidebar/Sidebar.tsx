@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { toast } from "sonner";
 
-export default function Sidebar() {
+export default function Sidebar({ refreshSignal }: { refreshSignal: number }) {
     const [isOpen, setIsOpen] = useState(true);
     const [documents, setDocuments] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function Sidebar() {
 
         const interval = setInterval(fetchDocs, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [refreshSignal]);
 
     const handleDelete = async (url: string) => {
         if (!confirm("Supprimer ce document de votre base de connaissances ?")) return;

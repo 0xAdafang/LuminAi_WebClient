@@ -57,5 +57,6 @@ export default function LandingPage() {
             {/* Auth Modal */}
             {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
         </div>
+
     );
 }

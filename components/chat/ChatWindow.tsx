@@ -5,7 +5,7 @@ import ChatInput from "./ChatInput";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
-export default function ChatWindow() {
+export default function ChatWindow({ onUploadSuccess }: { onUploadSuccess: () => void }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [isTyping, setIsTyping] = useState(false);
 
@@ -15,7 +15,7 @@ export default function ChatWindow() {
         setIsTyping(true);
 
         try {
-            // Appel à l'endpoint /api/chat
+
             const { data } = await api.post("/chat", { question: text });
 
 
@@ -35,11 +35,18 @@ export default function ChatWindow() {
 
     const handleFileUpload = async (file: File) => {
         const data = new FormData();
-        data.append("file", file); // "file" doit correspondre à r.FormFile("file") en Go
+        data.append("file", file);
 
-        const promise = api.post("/upload", data);
+        const uploadPromise = async () => {
+            const response = await api.post("/upload", data);
+            if (response.status === 201) {
+                onUploadSuccess();
+                return response;
+            }
+            throw new Error("Échec de l'indexation");
+        };
 
-        toast.promise(promise, {
+        toast.promise(uploadPromise(), {
             loading: 'Indexation de votre PDF en cours...',
             success: 'Document indexé et prêt pour l\'analyse ! ✨',
             error: (err) => `Erreur d'upload: ${err.response?.data || 'Vérifiez votre connexion'}`
@@ -54,6 +61,28 @@ export default function ChatWindow() {
         } catch (err: any) {
             toast.error(`Erreur d'indexation : ${err.response?.data || "L'URL est invalide."}`);
         }
+    };
+
+    const renderMessageWithCitations = (text: string, sources: any[]) => {
+        const parts = text.split(/(\[\^\d+\])/g);
+
+        return parts.map((part, index) => {
+            const match = part.match(/\[\^(\d+)\]/);
+            if (match) {
+                const sourceIndex = parseInt(match[1]) - 1;
+                const source = sources[sourceIndex];
+                return (
+                    <span
+                        key={index}
+                        title={source?.title}
+                        className="inline-flex items-center justify-center w-4 h-4 ml-1 text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded cursor-help"
+                    >
+          {match[1]}
+        </span>
+                );
+            }
+            return part;
+        });
     };
 
     return (
