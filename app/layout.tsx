@@ -1,18 +1,34 @@
-import { AuthProvider } from "@/context/AuthContext";
-import StarBackground from "@/components/shared/StarBackground";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import {Toaster} from "sonner";
+import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
+import { Toaster } from "sonner";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import StarBackground from "@/components/shared/StarBackground";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+    title: "MyAiTool",
+    description: "L'intelligence documentaire nouvelle génération",
+};
+
+export default function RootLayout({
+                                       children,
+                                   }: Readonly<{
+    children: React.ReactNode;
+}>) {
     return (
-        <html lang="fr" className="dark">
-        <body className="bg-[#030712] text-slate-100 antialiased">
+        <html lang="en">
+        <body className={inter.className}>
+        <StarBackground />
+
         <AuthProvider>
-            <Toaster richColors position="top-right" />
-            <StarBackground />
-            <main className="relative z-10">
+            <LanguageProvider>
                 {children}
-            </main>
+                <Toaster position="top-right" theme="dark" />
+            </LanguageProvider>
         </AuthProvider>
         </body>
         </html>
