@@ -4,18 +4,34 @@ export const translations = {
             tagline: "L'intelligence documentaire nouvelle génération",
             title: "Analyse. Indexe. Discute.",
             description: "Transformez vos PDF et URLs en une base de connaissances interactive.",
-            button: "Commencer l'expérience"
+            button: "Commencer l'expérience",
+            trustSignal: "Aucune carte requise · Gratuit pour commencer",
         },
         sidebar: {
             title: "Mes Documents",
             status: "Système Live",
             user: "Utilisateur Pro",
-            noDocs: "Aucun document indexé"
+            noDocs: "Aucun document indexé",
+            deleteTitle: "Supprimer ce document",
+            deleteConfirmTitle: "Supprimer le document",
+            deleteConfirmMessage: "Ce document et tous ses segments seront supprimés de votre base de connaissances.",
+            deleteCancel: "Annuler",
+            deleteButton: "Supprimer",
+            deleteSuccess: "Document supprimé",
+            deleteError: "Erreur lors de la suppression",
         },
         chat: {
             placeholder: "Posez une question à votre IA...",
             thinking: "L'IA analyse vos documents...",
-            uploading: "Indexation en cours..."
+            uploading: "Indexation en cours...",
+            errorDefault: "Le serveur de chat ne répond pas.",
+            errorUpload: "Erreur lors de l'indexation.",
+            uploadLoading: "Indexation de votre PDF en cours...",
+            uploadSuccess: "Document indexé et prêt pour l'analyse ! ✨",
+            ingestSuccess: "L'URL a été indexée avec succès !",
+            errorIngest: "L'URL est invalide.",
+            emptyTitle: "Bienvenue sur LuminAI",
+            emptyDescription: "Importez un document ou posez une question pour commencer.",
         },
         auth: {
             loginTitle: "Bon retour parmi nous",
@@ -31,26 +47,55 @@ export const translations = {
             linkRegister: "S'inscrire",
             linkLogin: "Se connecter",
             successRegister: "Inscription réussie ! Veuillez vous connecter.",
-            errorAuth: "Erreur lors de l'authentification."
-        }
+            errorAuth: "Erreur lors de l'authentification.",
+            errorEmpty: "Veuillez remplir tous les champs.",
+            errorEmailFormat: "Format d'email invalide.",
+            errorPasswordLength: "Le mot de passe doit contenir au moins 8 caractères.",
+            passwordHint: "Minimum 8 caractères",
+        },
+        chatInput: {
+            errorPdfOnly: "Veuillez sélectionner un fichier PDF.",
+            errorFileSize: "La taille du fichier dépasse la limite de 10 Mo.",
+            errorInvalidUrl: "Veuillez entrer une URL valide (ex: https://...)",
+            urlPlaceholder: "Collez une URL à indexer...",
+            urlSubmit: "Indexer",
+            urlTitle: "Ajouter une URL",
+            uploadTitle: "Uploader un PDF",
+        },
     },
     en: {
         landing: {
             tagline: "Next-generation document intelligence",
             title: "Analyze. Index. Chat.",
             description: "Transform your PDFs and URLs into an interactive knowledge base.",
-            button: "Get Started"
+            button: "Get Started",
+            trustSignal: "No credit card required · Free to start",
         },
         sidebar: {
             title: "My Documents",
             status: "System Live",
             user: "Pro User",
-            noDocs: "No documents indexed"
+            noDocs: "No documents indexed",
+            deleteTitle: "Delete this document",
+            deleteConfirmTitle: "Delete document",
+            deleteConfirmMessage: "This document and all its segments will be removed from your knowledge base.",
+            deleteCancel: "Cancel",
+            deleteButton: "Delete",
+            deleteSuccess: "Document deleted",
+            deleteError: "Error during deletion",
         },
         chat: {
             placeholder: "Ask a question to your AI...",
             thinking: "AI is analyzing your documents...",
-            uploading: "Indexing in progress..."
+            uploading: "Indexing in progress...",
+            errorDefault: "Chat server is not responding.",
+            errorUpload: "Error during indexing.",
+            uploadLoading: "Indexing your PDF...",
+            uploadSuccess: "Document indexed and ready for analysis! ✨",
+            ingestSuccess: "URL successfully indexed!",
+            errorIngest: "Invalid URL.",
+            emptyTitle: "Welcome to LuminAI",
+            emptyDescription: "Import a document or ask a question to get started.",
         },
         auth: {
             loginTitle: "Welcome back",
@@ -66,7 +111,20 @@ export const translations = {
             linkRegister: "Sign up",
             linkLogin: "Log in",
             successRegister: "Registration successful! Please log in.",
-            errorAuth: "Authentication error."
-        }
+            errorAuth: "Authentication error.",
+            errorEmpty: "Please fill in all fields.",
+            errorEmailFormat: "Invalid email format.",
+            errorPasswordLength: "Password must be at least 8 characters.",
+            passwordHint: "Minimum 8 characters",
+        },
+        chatInput: {
+            errorPdfOnly: "Please select a PDF file.",
+            errorFileSize: "File size exceeds the 10 MB limit.",
+            errorInvalidUrl: "Please enter a valid URL (e.g. https://...)",
+            urlPlaceholder: "Paste a URL to index...",
+            urlSubmit: "Index",
+            urlTitle: "Add a URL",
+            uploadTitle: "Upload a PDF",
+        },
     }
 };

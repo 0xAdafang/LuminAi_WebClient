@@ -1,8 +1,9 @@
 "use client";
-import { Paperclip, Link, Send } from "lucide-react";
+import { Paperclip, Link, Send, X } from "lucide-react";
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ChatInputProps {
     onSendMessage: (text: string) => void;
@@ -11,58 +12,59 @@ interface ChatInputProps {
     placeholder: string;
 }
 
+const URL_PATTERN = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+
 export default function ChatInput({ onSendMessage, onUploadFile, onIngestUrl, placeholder }: ChatInputProps) {
     const [input, setInput] = useState("");
+    const [urlInput, setUrlInput] = useState("");
+    const [showUrlBar, setShowUrlBar] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const urlInputRef = useRef<HTMLInputElement>(null);
+    const { t } = useLanguage();
 
     const handleSubmit = () => {
         if (!input.trim()) return;
-        onSendMessage(input);
+        onSendMessage(input.trim());
         setInput("");
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         if (file.type !== "application/pdf") {
-            toast.error("Veuillez sélectionner un fichier PDF.");
+            toast.error(t.chatInput.errorPdfOnly);
             return;
         }
-
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("La taille du fichier dépasse la limite de 10 Mo.");
+            toast.error(t.chatInput.errorFileSize);
             return;
         }
-
         onUploadFile(file);
-
         if (e.target) e.target.value = "";
     };
 
     const handleUrlSubmit = () => {
-        const url = prompt("Collez l'URL à indexer :");
+        const url = urlInput.trim();
         if (!url) return;
-
-
-        const urlPattern = new RegExp('^(https?:\\/\\/)?'+
-            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+
-            '((\\d{1,3}\\.){3}\\d{1,3}))'+
-            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+
-            '(\\?[;&a-z\\d%_.~+=-]*)?'+
-            '(\\#[-a-z\\d_]*)?$','i');
-
-        if (!urlPattern.test(url)) {
-            toast.error("Veuillez entrer une URL valide (ex: https://...)");
+        if (!URL_PATTERN.test(url)) {
+            toast.error(t.chatInput.errorInvalidUrl);
             return;
         }
-
         onIngestUrl(url);
+        setUrlInput("");
+        setShowUrlBar(false);
+    };
+
+    const handleUrlToggle = () => {
+        setShowUrlBar((prev) => !prev);
+        setUrlInput("");
+        if (!showUrlBar) {
+            setTimeout(() => urlInputRef.current?.focus(), 150);
+        }
     };
 
     return (
-        <div className="relative w-full max-w-4xl mx-auto p-4">
-
+        <div className="relative w-full max-w-4xl mx-auto">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -71,32 +73,72 @@ export default function ChatInput({ onSendMessage, onUploadFile, onIngestUrl, pl
                 onChange={handleFileChange}
             />
 
-            <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="relative flex items-end gap-2 bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-2 rounded-2xl shadow-2xl focus-within:border-blue-500/50 transition-all"
-            >
+            {/* URL bar */}
+            <AnimatePresence>
+                {showUrlBar && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 6, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: "auto" }}
+                        exit={{ opacity: 0, y: 6, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mb-2 overflow-hidden"
+                    >
+                        <div className="flex items-center gap-2 glass p-2 rounded-xl border-accent-emerald/30">
+                            <Link size={16} className="text-accent-emerald ml-1 flex-shrink-0" />
+                            <input
+                                ref={urlInputRef}
+                                type="url"
+                                value={urlInput}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") { e.preventDefault(); handleUrlSubmit(); }
+                                    if (e.key === "Escape") handleUrlToggle();
+                                }}
+                                placeholder={t.chatInput.urlPlaceholder}
+                                className="flex-1 bg-transparent text-text-primary placeholder-text-muted text-body outline-none"
+                            />
+                            <button
+                                onClick={handleUrlSubmit}
+                                disabled={!urlInput.trim()}
+                                className="px-3 py-1 text-caption font-semibold bg-accent-emerald text-white rounded-lg hover:brightness-110 disabled:opacity-40 transition-all"
+                            >
+                                {t.chatInput.urlSubmit}
+                            </button>
+                            <button
+                                onClick={handleUrlToggle}
+                                className="p-1 text-text-muted hover:text-text-secondary transition-colors"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                <div className="flex gap-1 pb-1">
+            {/* Main input */}
+            <div className="relative flex items-end gap-2 glass p-2 rounded-2xl shadow-elevation-2 focus-within:border-accent-blue/40 transition-all">
+                <div className="flex gap-0.5 pb-1">
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-all"
+                        className="p-2 text-text-muted hover:text-accent-blue hover:bg-accent-blue-muted rounded-xl transition-all"
                         type="button"
-                        title="Uploader un PDF"
+                        title={t.chatInput.uploadTitle}
                     >
-                        <Paperclip size={20} />
+                        <Paperclip size={19} />
                     </button>
-
                     <button
-                        onClick={handleUrlSubmit}
-                        className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 rounded-xl transition-all"
+                        onClick={handleUrlToggle}
+                        className={`p-2 rounded-xl transition-all ${
+                            showUrlBar
+                                ? "text-accent-emerald bg-accent-emerald-muted"
+                                : "text-text-muted hover:text-accent-emerald hover:bg-accent-emerald-muted"
+                        }`}
                         type="button"
-                        title="Ajouter une URL"
+                        title={t.chatInput.urlTitle}
                     >
-                        <Link size={20} />
+                        <Link size={19} />
                     </button>
                 </div>
-
 
                 <textarea
                     rows={1}
@@ -109,19 +151,18 @@ export default function ChatInput({ onSendMessage, onUploadFile, onIngestUrl, pl
                         }
                     }}
                     placeholder={placeholder}
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none py-3 px-2 max-h-32 outline-none scrollbar-hide"
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-text-primary placeholder-text-muted resize-none py-3 px-2 max-h-32 outline-none scrollbar-hide text-body"
                     style={{ minHeight: "44px" }}
                 />
-
 
                 <button
                     onClick={handleSubmit}
                     disabled={!input.trim()}
-                    className="mb-1 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 transition-all shadow-lg shadow-blue-600/20"
+                    className="mb-1 p-2.5 bg-accent-blue text-white rounded-xl hover:bg-accent-blue-hover disabled:opacity-40 transition-all shadow-glow-blue"
                 >
                     <Send size={18} />
                 </button>
-            </motion.div>
+            </div>
         </div>
     );
 }

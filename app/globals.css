@@ -1,26 +1,198 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/preflight" layer(base);
+@import "tailwindcss/utilities" layer(utilities);
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+    /* Colors - Lumin */
+    --color-lumin-bg: #030712;
+    --color-lumin-surface: #0a1120;
+    --color-lumin-raised: #111827;
+    --color-lumin-border: #1e293b;
+    --color-lumin-border-hover: #334155;
+
+    /* Colors - Accent */
+    --color-accent-blue: #3b82f6;
+    --color-accent-blue-hover: #60a5fa;
+    --color-accent-blue-muted: rgba(59, 130, 246, 0.12);
+    --color-accent-emerald: #10b981;
+    --color-accent-emerald-muted: rgba(16, 185, 129, 0.12);
+    --color-accent-red: #ef4444;
+    --color-accent-red-muted: rgba(239, 68, 68, 0.10);
+
+    /* Colors - Text */
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+    --color-text-faint: #475569;
+
+    /* Fonts */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Font sizes */
+    --text-hero: 4.5rem;
+    --text-hero--line-height: 1.05;
+    --text-hero--letter-spacing: -0.03em;
+    --text-hero-sm: 2.75rem;
+    --text-hero-sm--line-height: 1.1;
+    --text-hero-sm--letter-spacing: -0.02em;
+    --text-heading: 1.5rem;
+    --text-heading--line-height: 1.3;
+    --text-heading--letter-spacing: -0.02em;
+    --text-subheading: 1.125rem;
+    --text-subheading--line-height: 1.4;
+    --text-subheading--letter-spacing: -0.01em;
+    --text-body: 0.875rem;
+    --text-body--line-height: 1.6;
+    --text-caption: 0.75rem;
+    --text-caption--line-height: 1.5;
+    --text-micro: 0.625rem;
+    --text-micro--line-height: 1.4;
+    --text-micro--letter-spacing: 0.05em;
+
+    /* Shadows */
+    --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
+    --shadow-glow-emerald: 0 0 20px rgba(16, 185, 129, 0.15);
+    --shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-elevation-3: 0 12px 40px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    /* Border radius */
+    --radius-2xl: 1rem;
+    --radius-3xl: 1.25rem;
+    --radius-4xl: 1.5rem;
+
+    /* Animations */
+    --animate-fade-in: fadeIn 0.3s ease-out;
+    --animate-slide-up: slideUp 0.4s ease-out;
+    --animate-pulse-subtle: pulseSubtle 2s ease-in-out infinite;
+
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    @keyframes slideUp {
+        0% { opacity: 0; transform: translateY(8px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseSubtle {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+    body {
+        background: var(--color-lumin-bg);
+        color: var(--color-text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: #f1f5f9;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #1e293b transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+*:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.prose-chat {
+    --tw-prose-body: #cbd5e1;
+    --tw-prose-headings: #f1f5f9;
+    --tw-prose-bold: #f1f5f9;
+    --tw-prose-links: #60a5fa;
+    --tw-prose-code: #e2e8f0;
+    --tw-prose-pre-bg: rgba(15, 23, 42, 0.6);
+    --tw-prose-quotes: #94a3b8;
+    --tw-prose-quote-borders: #334155;
+    --tw-prose-counters: #64748b;
+    --tw-prose-bullets: #475569;
+    --tw-prose-hr: #1e293b;
+    --tw-prose-th-borders: #334155;
+    --tw-prose-td-borders: #1e293b;
+}
+
+.prose-chat code:not(pre code) {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 0.15em 0.4em;
+    border-radius: 0.3em;
+    font-size: 0.85em;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.prose-chat pre {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(30, 41, 59, 0.8);
+    border-radius: 0.75rem;
+    backdrop-filter: blur(8px);
+}
+
+button, a, input, textarea {
+    transition-property: color, background-color, border-color, box-shadow, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+}
+
+.glass {
+    background: rgba(10, 17, 32, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+.glass-raised {
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #3b82f6, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15),
+    0 0 60px rgba(59, 130, 246, 0.05);
+}
+
+.glow-emerald {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15),
+    0 0 60px rgba(16, 185, 129, 0.05);
 }

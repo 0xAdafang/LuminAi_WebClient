@@ -1,27 +1,32 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FileText, Trash2, ChevronLeft, ChevronRight, Database, Globe } from "lucide-react";
+import { FileText, Trash2, ChevronLeft, ChevronRight, Database, Globe, AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 
+interface DeleteConfirm {
+    url: string;
+    label: string;
+}
+
 export default function Sidebar({ refreshSignal }: { refreshSignal: number }) {
     const { token } = useAuth();
-
-    const { t, lang, setLang } = useLanguage();
+    const { t } = useLanguage();
 
     const [isOpen, setIsOpen] = useState(true);
     const [documents, setDocuments] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirm | null>(null);
 
     const fetchDocs = async () => {
         try {
             const { data } = await api.get("/documents");
-            setDocuments(data || []);
+            setDocuments(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error("Erreur lors de la récupération des docs", err);
+            console.error("Failed to fetch documents", err);
         } finally {
             setLoading(false);
         }
@@ -29,134 +34,190 @@ export default function Sidebar({ refreshSignal }: { refreshSignal: number }) {
 
     useEffect(() => {
         fetchDocs();
-
         const interval = setInterval(fetchDocs, 30000);
         return () => clearInterval(interval);
     }, [refreshSignal]);
 
-    const handleDelete = async (url: string) => {
+    const getDocLabel = (doc: string) => doc.replace("file://", "");
 
-        const confirmMsg = lang === 'fr'
-            ? "Supprimer ce document de votre base de connaissances ?"
-            : "Delete this document from your knowledge base?";
+    const handleDeleteClick = (doc: string) => {
+        setDeleteConfirm({ url: doc, label: getDocLabel(doc) });
+    };
 
-        if (!confirm(confirmMsg)) return;
-
+    const handleDeleteConfirm = async () => {
+        if (!deleteConfirm) return;
         try {
-            await api.delete(`/documents?url=${encodeURIComponent(url)}`);
-            toast.success(lang === 'fr' ? "Document supprimé" : "Document deleted");
+            await api.delete(`/documents?url=${encodeURIComponent(deleteConfirm.url)}`);
+            toast.success(t.sidebar.deleteSuccess);
             fetchDocs();
-        } catch (err) {
-            toast.error(lang === 'fr' ? "Erreur lors de la suppression" : "Error during deletion");
+        } catch (err: any) {
+            toast.error(err.response?.data?.error || t.sidebar.deleteError);
+        } finally {
+            setDeleteConfirm(null);
         }
     };
 
     return (
-        <motion.aside
-            initial={false}
-            animate={{ width: isOpen ? 320 : 80 }}
-            className="relative h-screen bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 flex flex-col transition-all duration-300"
-        >
-            {/* Bouton de toggle */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="absolute -right-3 top-10 bg-blue-600 p-1 rounded-full text-white shadow-lg z-50"
+        <>
+            <motion.aside
+                initial={false}
+                animate={{ width: isOpen ? 320 : 72 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="relative h-screen bg-lumin-surface/50 backdrop-blur-xl border-r border-lumin-border flex flex-col overflow-hidden"
             >
-                {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-            </button>
+                {/* Toggle */}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="absolute -right-3 top-10 bg-accent-blue hover:bg-accent-blue-hover p-1 rounded-full text-white shadow-elevation-1 z-50 transition-colors"
+                >
+                    {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                </button>
 
-            <div className="p-6 flex flex-col h-full">
-                <div className="flex flex-col mb-8 gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-                            <Database size={24} />
+                <div className="p-5 flex flex-col h-full">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="p-2 bg-accent-blue-muted rounded-xl text-accent-blue flex-shrink-0">
+                            <Database size={22} />
                         </div>
-                        {/* Utilisation de la traduction pour le titre */}
                         {isOpen && (
                             <motion.h2
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-xl font-bold text-white tracking-tight"
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="font-display text-subheading text-text-primary truncate"
                             >
                                 {t.sidebar.title}
                             </motion.h2>
                         )}
                     </div>
 
-                    {isOpen && (
-                        <button
-                            onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-                            className="w-fit text-[9px] font-bold border border-white/10 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 transition-all uppercase tracking-widest"
-                        >
-                            {lang === "fr" ? "English 🇺🇸" : "Français 🇫🇷"}
-                        </button>
-                    )}
-                </div>
-
-                {/* Liste des documents */}
-                <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-                    {loading ? (
-                        <div className="text-slate-500 text-sm animate-pulse">
-                            {lang === 'fr' ? 'Chargement...' : 'Loading...'}
-                        </div>
-                    ) : documents.length === 0 ? (
-                        isOpen && <p className="text-slate-500 text-xs italic">{t.sidebar.noDocs}</p>
-                    ) : (
-                        <AnimatePresence>
-                            {documents.map((doc, i) => (
-                                <motion.div
-                                    key={doc}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 10 }}
-                                    className="group flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:border-blue-500/50 transition-all"
-                                >
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="text-slate-400 group-hover:text-blue-400">
-                                            {doc.startsWith("http") ? <Globe size={18} /> : <FileText size={18} />}
-                                        </div>
-                                        {isOpen && (
-                                            <span className="text-sm text-slate-300 truncate max-w-[160px]">
-                                                {doc.replace("file://", "")}
-                                            </span>
-                                        )}
+                    {/* Document list */}
+                    <div className="flex-1 overflow-y-auto space-y-1.5 custom-scrollbar">
+                        {loading ? (
+                            <div className="space-y-1.5">
+                                {[...Array(3)].map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className="h-12 rounded-xl bg-lumin-raised/50 animate-pulse"
+                                        style={{ animationDelay: `${i * 150}ms` }}
+                                    />
+                                ))}
+                            </div>
+                        ) : documents.length === 0 ? (
+                            isOpen && (
+                                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                                    <div className="p-3 bg-lumin-raised rounded-full">
+                                        <FileText size={20} className="text-text-faint" />
                                     </div>
+                                    <p className="text-text-muted text-caption">{t.sidebar.noDocs}</p>
+                                </div>
+                            )
+                        ) : (
+                            <AnimatePresence>
+                                {documents.map((doc) => (
+                                    <motion.div
+                                        key={doc}
+                                        initial={{ opacity: 0, x: -8 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 8 }}
+                                        className="group flex items-center justify-between p-3 rounded-xl bg-lumin-raised/30 border border-lumin-border hover:border-lumin-border-hover hover:bg-lumin-raised/60 transition-all"
+                                    >
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="text-text-muted group-hover:text-accent-blue flex-shrink-0 transition-colors">
+                                                {doc.startsWith("http") ? <Globe size={17} /> : <FileText size={17} />}
+                                            </div>
+                                            {isOpen && (
+                                                <span className="text-body text-text-secondary group-hover:text-text-primary truncate max-w-[160px] transition-colors" title={doc}>
+                                                    {getDocLabel(doc)}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    {isOpen && (
-                                        <button
-                                            onClick={() => handleDelete(doc)}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    )}
-                </div>
+                                        {isOpen && (
+                                            <button
+                                                onClick={() => handleDeleteClick(doc)}
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 text-text-muted hover:text-accent-red hover:bg-accent-red-muted rounded-lg transition-all flex-shrink-0"
+                                                title={t.sidebar.deleteTitle}
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        )}
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        )}
+                    </div>
 
-                {/* Footer (Info Utilisateur / Statut) */}
-                {isOpen && (
-                    <div className="mt-auto space-y-4">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 w-fit shadow-inner">
-                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">
-                                {t.sidebar.status}
-                            </span>
-                        </div>
-                        <div className="pt-4 border-t border-slate-800/50 flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/30 transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-emerald-400 flex-shrink-0" />
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-semibold text-white truncate">{t.sidebar.user}</span>
-                                <span className="text-[10px] text-slate-500 font-mono truncate">
-                                    ID: {token?.substring(0, 8)}...
+                    {/* Footer */}
+                    {isOpen && (
+                        <div className="mt-auto space-y-4 pt-4">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent-emerald-muted border border-accent-emerald/10 w-fit">
+                                <div className="h-1.5 w-1.5 rounded-full bg-accent-emerald animate-pulse-subtle" />
+                                <span className="text-micro text-accent-emerald font-bold uppercase tracking-widest">
+                                    {t.sidebar.status}
                                 </span>
                             </div>
+                            <div className="pt-4 border-t border-lumin-border flex items-center gap-3 p-2 rounded-xl hover:bg-lumin-raised/40 transition-colors">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-accent-emerald flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-caption font-semibold text-text-primary truncate">{t.sidebar.user}</span>
+                                    <span className="text-micro text-text-faint font-mono truncate">
+                                        ID: {token?.substring(0, 8)}...
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                    )}
+                </div>
+            </motion.aside>
+
+            {/* Delete modal */}
+            <AnimatePresence>
+                {deleteConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative w-full max-w-sm glass-raised p-6 rounded-2xl shadow-elevation-3"
+                        >
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="absolute top-3 right-3 text-text-muted hover:text-text-primary transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-accent-red-muted rounded-xl">
+                                    <AlertTriangle size={20} className="text-accent-red" />
+                                </div>
+                                <h3 className="font-display text-subheading text-text-primary">{t.sidebar.deleteConfirmTitle}</h3>
+                            </div>
+
+                            <p className="text-body text-text-secondary mb-2">{t.sidebar.deleteConfirmMessage}</p>
+                            <p className="text-body text-text-primary font-mono bg-lumin-surface px-3 py-2 rounded-lg truncate mb-6 border border-lumin-border">
+                                {deleteConfirm.label}
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 px-4 py-2.5 text-body font-medium text-text-secondary bg-lumin-raised hover:bg-lumin-border rounded-xl transition-colors"
+                                >
+                                    {t.sidebar.deleteCancel}
+                                </button>
+                                <button
+                                    onClick={handleDeleteConfirm}
+                                    className="flex-1 px-4 py-2.5 text-body font-medium text-white bg-accent-red hover:brightness-110 rounded-xl transition-all"
+                                >
+                                    {t.sidebar.deleteButton}
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
                 )}
-            </div>
-        </motion.aside>
+            </AnimatePresence>
+        </>
     );
 }

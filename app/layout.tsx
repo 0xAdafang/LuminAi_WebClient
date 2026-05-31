@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { Toaster } from "sonner";
-
 import StarBackground from "@/components/shared/StarBackground";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+    subsets: ["latin"],
+    variable: "--font-inter",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+    subsets: ["latin"],
+    variable: "--font-jakarta",
+});
 
 export const metadata: Metadata = {
-    title: "MyAiTool",
-    description: "L'intelligence documentaire nouvelle génération",
+    title: "LuminAI",
+    description: "Next-generation document intelligence",
 };
 
 export default function RootLayout({
@@ -20,14 +27,23 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-        <body className={inter.className}>
+        <html lang="en" className="dark">
+        <body className={`${inter.variable} ${jakarta.variable} font-sans`}>
         <StarBackground />
-
         <AuthProvider>
             <LanguageProvider>
                 {children}
-                <Toaster position="top-right" theme="dark" />
+                <Toaster
+                    position="top-right"
+                    theme="dark"
+                    toastOptions={{
+                        style: {
+                            background: '#111827',
+                            border: '1px solid #1e293b',
+                            color: '#f1f5f9',
+                        },
+                    }}
+                />
             </LanguageProvider>
         </AuthProvider>
         </body>
